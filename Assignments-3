@@ -1,0 +1,87 @@
+--Orders and Items Schema
+select * from demo_states;
+select * from demo_customers;
+select * from demo_orders;
+select * from demo_products;
+select * from demo_order_items;
+1.select d.customer_id,d.cust_first_name,d.cust_last_name,e.order_total from demo_customers d full outer join demo_orders e on d.customer_id=e.customer_id order by e.order_total desc;
+
+select * from 
+(select d.*,dense_rank() over(order by order_total desc) as dense_rank from demo_orders d) where dense_rank<=3;
+
+
+2.select d.customer_id,d.cust_first_name,d.cust_last_name,count(e.order_id) as Total_orders
+from demo_customers d full outer join demo_orders e on d.customer_id=e.customer_id group by d.customer_id,d.cust_first_name,d.cust_last_name order by Total_orders desc;
+
+3.select d.product_name,e.quantity from demo_products d full outer join demo_order_items e on d.product_id=e.product_id order by e.quantity desc;
+
+4.select 
+    d.cust_last_name, p.product_name,
+    sum(g.quantity) as total_quantity
+from demo_customers d
+left join demo_orders f on d.customer_id = f.customer_id
+left join demo_order_items g on f.order_id = g.order_id
+left join demo_products p on p.product_id = g.product_id
+group by d.cust_last_name, p.product_name
+order by d.cust_last_name, total_quantity desc;
+
+5.select 
+    d.cust_last_name,
+    sum(case when p.product_name = 'Business Shirt' then f.quantity else 0 end) as business_shirt_quantity,
+    sum(case when p.product_name = 'Trousers' then f.quantity else 0 end) as trousers_quantity,
+    sum(case when p.product_name = 'Jacket' then f.quantity else 0 end) as jacket_quantity,
+    sum(case when p.product_name = 'Blouse' then f.quantity else 0 end) as blouse_quantity,
+    sum(case when p.product_name = 'Skirt' then f.quantity else 0 end) as skirt_quantity,
+    sum(case when p.product_name = 'Ladies Shoes' then f.quantity else 0 end) as ladies_shoes_quantity,
+    sum(case when p.product_name = 'Mens Shoes' then f.quantity else 0 end) as mens_shoes_quantity,
+    sum(case when p.product_name = 'Belt' then f.quantity else 0 end) as belt_quantity,
+    sum(case when p.product_name = 'Bag' then f.quantity else 0 end) as bag_quantity,
+    sum(case when p.product_name = 'Wallet' then f.quantity else 0 end) as wallet_quantity
+from demo_customers d
+left join demo_orders e on d.customer_id = e.customer_id
+left join demo_order_items f on e.order_id = f.order_id
+left join demo_products p on p.product_id = f.product_id
+group by d.cust_last_name
+order by d.cust_last_name;
+
+
+
+
+
+
+
+
+
+
+6.select order_year,total_orders
+from (
+    select to_char(d.order_timestamp, 'YYYY') as order_year,count(d.order_id) as total_orders,Dense_rank() over (order by count(d.order_id) desc) as Dense_rank
+    from demo_orders d
+    group by to_char(d.order_timestamp, 'YYYY')
+)
+
+7.
+8.select category,total_quantity_sold
+from (
+    select d.category,sum(e.quantity) as total_quantity_sold,Dense_rank() over (order by sum(e.quantity) desc) as Dense_ranking
+    from demo_products d join demo_order_items e on d.product_id = e.product_id
+    group by d.category
+) 
+where Dense_ranking = 1;
+
+
+9.select category,total_quantity_sold
+from (
+    select d.category,sum(e.quantity) as total_quantity_sold,Dense_rank() over (order by sum(e.quantity) desc) as Dense_ranking
+    from demo_products d join demo_order_items e on d.product_id = e.product_id
+    group by d.category
+) 
+where Dense_ranking = 2;
+
+
+10.select d.cust_last_name, g.product_name, Sum(f.quantity) as total_quantity
+from Demo_customers d
+left join Demo_orders e on d.customer_id = e.customer_id
+left join Demo_order_items f on e.order_id = f.order_id
+left join Demo_products g on f.product_id = g.product_id
+group by rollup (d.cust_last_name, g.product_name);
